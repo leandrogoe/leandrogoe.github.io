@@ -14,7 +14,7 @@ As you might be guessing a relatively low number of very slow operations - 128 t
 
 = Sidekiq =
 
-Sidekiq still remains an strong player in the realm of background processing engines that easily integrate with Ruby. When you work with Sidekiq, you need to decide how many Sidekiq processes you are going to spawn and how many threads each one of those will have. Furthermore, if you are working in the cloud, you may decide to autoscale the number of your Sidekiq processes based on load, so that you only pay what you need, what is a good thing.
+Sidekiq still remains a strong player in the realm of background processing engines that easily integrate with Ruby. When you work with Sidekiq, you need to decide how many Sidekiq processes you are going to spawn and how many threads each one of those will have. Furthermore, if you are working in the cloud, you may decide to autoscale the number of your Sidekiq processes based on load, so that you only pay what you need, what is a good thing.
 
 You may be thinking, well we can just limit the maximum number of Sidekiq threads available some low number - a few tens of threads - and that would ensure we would never leave our database unresponsive. While that's mostly true, as your system grows, sooner or later you will need to scale that number of threads to much higher numbers. And that's feasible! If your jobs are not I/O intensive, you can easily scale Sidekiq to several thousands of threads without affecting the performance of your MongoDB cluster.
 
@@ -29,5 +29,57 @@ Ideally, we should aspire to a more intelligent control mechanism that can quick
 The fact that we can easily use read a write tickets as a metric of the database strain is actually great, because it lets us build mechanisms using it as the main metric. We can easily get the number of tickets available through the `serverStatus` command:
 
 ```
+> Mongoid::Clients.default.database.command('serverStatus'=> 1).documents[0]['wiredTiger']['concurrentTransactions']
+{
+    "write" => {
+                 "out" => 0,
+           "available" => 128,
+        "totalTickets" => 128
+    },
+     "read" => {
+                 "out" => 1,
+           "available" => 127,
+        "totalTickets" => 128
+    }
+}
+```
 
+In order to protect our database health, the most reasonable thing to do is just reject further jobs once the tickets are too low and retry them later. This can easily be achieved through some simple middleware code and relying on the error retry mechanism from Sidekiq, which by default uses exponential backoff to retry jobs:
+
+```
+class MongoProtector
+  MIN_TICKET_THRESHOLD = 80
+
+  class TicketsTooLowError < StandardError; end;
+
+  def initialize(optional_args)
+    @args = optional_args
+  end
+
+  def call(worker, job, queue)
+    raise TicketsTooLowError if tickets_too_low?
+    yield
+  end
+
+  def tickets_too_low?
+    wiredtiger_tickets["write"]["available"] < MIN_TICKET_THRESHOLD || wiredtiger_tickets["read"]["available"] < MIN_TICKET_THRESHOLD
+  end
+
+  def wiredtiger_tickets
+    @wiredtiger_tickets_read_at ||= Time.now
+    if @wiredtiger_tickets_read_at < 1.minutes.ago
+      @wiredtiger_tickets = Mongoid::Clients.default.database.command('serverStatus'=> 1).documents[0]['wiredTiger']['concurrentTransactions']
+    end
+    @wiredtiger_tickets
+  end
+end
+```
+
+Then on your Sidekiq initialization configuration, simply add the new middleware to the list of server middlewares:
+```
+Sidekiq.configure_server do |config|
+  config.server_middleware do |chain|
+    chain.add MongoProtector, optional_args
+  end
+end
 ```
