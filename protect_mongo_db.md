@@ -91,7 +91,7 @@ BAM! Your background processing will now start pushing back jobs whenever the da
 While the code described above gets the job done, it is suboptimal in a number of ways. In particular:
     * It doesn't take into account if a job can actually be retried later on or it will go to the DeadSet
     * It always pushes back, even if the job doesn't access the database at all.
-    * It cannot manage multiple MongoDB clusters.
+    * It cannot manage correctly multi-server clusters, let alone multiple MongoDB clusters.
 
 In order to solve these limitations, a new gem is being introduced, sidekiq_data_protector. It addresses those limitations described above and provides extensibility to handle other databases in the future.
 
