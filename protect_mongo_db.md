@@ -8,15 +8,13 @@ MongoDB is one of the leading databases engines on the NoSql space. WiredTiger i
 
 WiredTiger official documentation lacks an explanation of why this number was chosen or exactly why this mechanism was introduced, but unofficial sources suggest that the concurrency control is limited in this way in order to protect the database and the default limits were set high enough to ensure they would never be a bottleneck. So basically they are good thing and consultants don't recommend you to change them!
 
-During operations it may happen that you see that read or write tickets go dangerously low, which means that you are putting too much strain on the database. If the number concurrent operations available does reach zero, all further operation requests start to queue, meaning that your database essentially stops responding until a ticket is freed.
+Therefore, if you see that read or write tickets go dangerously low, it means that you are putting too much strain on the database. If the number concurrent operations available does reach zero, all further operation requests start to queue, meaning that your database essentially stops responding until a ticket is freed.
 
 As you might be guessing a relatively low number of very slow operations - 128 to be exact - or a greater number of slightly inefficient operations can easily deplete these tickets. Therefore it is crucial that you have some controls to prevent this ever happens, specially if you allow your background processing engine to autoscale.
 
 = Sidekiq =
 
-Sidekiq still remains a strong player in the realm of background processing engines that easily integrate with Ruby. When you work with Sidekiq, you need to decide how many Sidekiq processes you are going to spawn and how many threads each one of those will have. Furthermore, if you are working in the cloud, you may decide to autoscale the number of your Sidekiq processes based on load, so that you only pay what you need, what is a good thing.
-
-You may be thinking, well we can just limit the maximum number of Sidekiq threads available some low number - a few tens of threads - and that would ensure we would never leave our database unresponsive. While that's mostly true, as your system grows, sooner or later you will need to scale that number of threads to much higher numbers. And that's feasible! If your jobs are not I/O intensive, you can easily scale Sidekiq to several thousands of threads without affecting the performance of your MongoDB cluster.
+Within the Ruby ecosystem Sidekiq remains as one of the main choices for a background processing engine. Sidekiq supports both a multi-threaded and multi-process a deployment. As your application grows, you may will need to scale the maximum amount of Sidekiq total threads, which will eventually be much larger than the available read and write tickets that are available in a MongoDB database. This is fine.
 
 However, if you are in the scenario in which you have such a heavy background processing load, you may have noticed that any tiny mistake - like an unindexed query - can easily kill your database.
 
@@ -69,6 +67,7 @@ class MongoProtector
     @wiredtiger_tickets_read_at ||= Time.now
     if @wiredtiger_tickets_read_at < 1.minutes.ago
       @wiredtiger_tickets = Mongoid::Clients.default.database.command('serverStatus'=> 1).documents[0]['wiredTiger']['concurrentTransactions']
+      @wiredtiger_tickets_read_at = Time.now
     end
     @wiredtiger_tickets
   end
@@ -84,7 +83,7 @@ Sidekiq.configure_server do |config|
 end
 ```
 
-BAM! Your background processing will now start pushing back jobs whenever the database is under stress. However, there is still room for improvement...
+BAM! Sidekiq will now start pushing back jobs whenever the database is under risk of losing all concurrency tickets. However, there is still room for improvement...
 
 = Sidekiq Database Protector =
 
