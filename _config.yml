@@ -19,7 +19,7 @@ locale                   : "en-US"
 title                    : "Bytes and torta fritas"
 title_separator          : "-"
 subtitle                 : # site tagline that appears below site title in masthead
-name                     : "Your Name"
+name                     : "Leandro Gomez"
 description              : "An amazing website."
 url                      : # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
 baseurl                  : # the subpath of your site, e.g. "/blog"
@@ -107,7 +107,7 @@ author:
   name   : "Leandro Gomez"
   avatar : "/assets/images/lg-1.jpeg"
   bio    : >-
-    Hey there, I'm a software engineer hailing from the sunny shores of Uruguay.
+    Hey there, I'm a software engineer hailing from the sunny shores of Montevideo.
 
     I've been around the block when it comes to tech stacks, but lately I've been sinking my teeth into Google Cloud, Ruby, and NodeJS like they're going out of style.
 
