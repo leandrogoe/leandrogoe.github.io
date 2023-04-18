@@ -12,7 +12,9 @@ Almost every SaaS platform has to manage some sort of background job processing.
 
 MongoDB is one of the leading databases engines on the NoSql space. WiredTiger is the default storage engine for MongoDB. As with any other decent database, WiredTiger supports concurrent writes and reads, and concurrency locks are handled at the document level for most operations. However, the level of concurrency that WiredTiger can manage is limited to 128 read requests and a same number of write requests by default. Those limits are typically informally referred to as the read a write tickets available in the system.
 
-WiredTiger official documentation lacks an explanation of why this number was chosen or exactly why this mechanism was introduced, but unofficial sources suggest that the concurrency control is limited in this way in order to protect the database and the default limits were set high enough to ensure they would never be a bottleneck. So basically they are good thing and consultants don't recommend you to change them!
+As usual, WiredTiger official documentation lacks an explanation of why this number was chosen or exactly why this mechanism was introduced, but unofficial sources suggest that the concurrency control is limited in this way in order to protect the database and the default limits were set high enough to ensure they would never be a bottleneck...
+
+<img src="/assets/images/documentation_meme.png">
 
 Therefore, if you see that read or write tickets go dangerously low, it means that you are putting too much strain on the database. If the number concurrent operations available does reach zero, all further operation requests start to queue, meaning that your database essentially stops responding until a ticket is freed.
 
