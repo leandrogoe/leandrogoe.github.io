@@ -1,5 +1,7 @@
 ---
 layout: single
+toc: true
+toc_sticky: true
 title:  "Protecting your MongoDB cluster from Sidekiq scaling"
 date:   2023-04-17 22:00:00 -0300
 ---
