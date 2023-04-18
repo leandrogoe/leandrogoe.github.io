@@ -18,9 +18,9 @@ As you might be guessing a relatively low number of very slow operations - 128 t
 
 ## Sidekiq
 
-Within the Ruby ecosystem Sidekiq remains as one of the main choices for a background processing engine. Sidekiq supports both a multi-threaded and multi-process a deployment. As your application grows, you may will need to scale the maximum amount of Sidekiq total threads, which will eventually be much larger than the available read and write tickets that are available in a MongoDB database. This is fine.
+Within the Ruby ecosystem Sidekiq remains as one of the main choices for a background processing engine. Sidekiq supports both a multi-threaded and multi-process a deployment. As your application grows, you may need to scale the maximum amount of Sidekiq total threads, which will eventually be much larger than the available read and write tickets that are available in a MongoDB database. This is fine, but it poses some challenges.
 
-However, if you are in the scenario in which you have such a heavy background processing load, you may have noticed that any tiny mistake - like an unindexed query - can easily kill your database.
+If you are in the scenario in which you have such a heavy background processing load, you may have noticed that any tiny mistake - like an unindexed query - can easily kill your database.
 
 ## Back off!
 
@@ -31,7 +31,9 @@ Ideally, we should aspire to a more intelligent control mechanism that can quick
 The fact that we can easily use read a write tickets as a metric of the database strain is actually great, because it lets us build mechanisms using it as the main metric. We can easily get the number of tickets available through the `serverStatus` command:
 
 ```ruby
-> Mongoid::Clients.default.database.command('serverStatus'=> 1).documents[0]['wiredTiger']['concurrentTransactions']
+> Mongoid::Clients.default.database.
+    command('serverStatus'=> 1).
+    documents[0]['wiredTiger']['concurrentTransactions']
 {
     "write" => {
                  "out" => 0,
@@ -89,11 +91,11 @@ end
 
 BAM! Sidekiq will now start pushing back jobs whenever the database is under risk of losing all concurrency tickets. However, there is still room for improvement...
 
-# Sidekiq Tamer
+## Sidekiq Tamer
 
 While the code described above gets the job done, it is suboptimal in a number of ways. In particular:
-    * It doesn't take into account if a job can actually be retried later on or it will go to the DeadSet
-    * It always pushes back, even if the job doesn't access the database at all.
-    * It cannot manage correctly multi-server clusters, let alone multiple MongoDB clusters.
+* It doesn't take into account if a job can actually be retried later on or it will go to the DeadSet
+* It always pushes back, even if the job doesn't access the database at all.
+* It cannot manage correctly multi-server clusters, let alone multiple MongoDB clusters.
 
-In order to solve these limitations, a new gem is being introduced, sidekiq_data_protector. It addresses those limitations described above and provides extensibility to handle other databases in the future.
+In order to solve these limitations, a new gem is being introduced, sidekiq-tamer. It addresses those limitations described above and provides extensibility to handle other kind of resources in the future.
