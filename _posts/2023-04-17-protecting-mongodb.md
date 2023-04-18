@@ -100,4 +100,4 @@ While the code described above gets the job done, it is suboptimal in a number o
 * It always pushes back, even if the job doesn't access the database at all.
 * It cannot manage correctly multi-server clusters, let alone multiple MongoDB clusters.
 
-In order to solve these limitations, a new gem is being introduced, sidekiq-tamer. It addresses those limitations described above and provides extensibility to handle other kind of resources in the future.
+In order to solve these limitations, a new gem is being introduced, [sidekiq-tamer](https://github.com/leandrogoe/sidekiq-tamer). It addresses those limitations described above and provides extensibility to handle other kind of resources in the future.
