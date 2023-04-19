@@ -28,11 +28,11 @@ If you are in the scenario in which you have such a heavy background processing 
 
 ## Back off!
 
-If you know in advance that certain jobs can create great strain into the database, you can throttle them to prevent they consume too many WiredTiger tickets. There are already a few good libraries that integrate with Sidekiq and allow performing throttling for particular job classes. While manually throttling jobs is incredibly useful, sometimes we simply lack the information to add the proper throttling constraints to all the job classes in advance. Moreover, a throttling configuration that works perfectly well in normal circumstances, it may prove too unrestrictive when different job types create load at the same time.
+If you know in advance that certain jobs can create great strain into the database, you can throttle them to prevent they consume too many WiredTiger tickets. There are already a few good libraries that integrate with Sidekiq and allow performing throttling for particular job classes. While manually throttling jobs is incredibly useful, sometimes we simply lack the information to add the proper throttling constraints to all the job classes in advance. Moreover, a throttling configuration that works perfectly well in normal circumstances, may prove too unrestrictive when different job types create load at the same time.
 
-Ideally, we should aspire to a more intelligent control mechanism that can quickly react against the strain of the database and that prevents we ever reach a point in which the database has degraded to unacceptable levels.
+Ideally, we should aspire to a more intelligent control mechanism that can quickly react against the stress of the database and that prevents we ever reach a point in which the database has degraded to unacceptable levels.
 
-The fact that we can easily use read a write tickets as a metric of the database strain is actually great, because it lets us build mechanisms using it as the main metric. We can easily get the number of tickets available through the `serverStatus` command:
+The fact that we can easily use read a write tickets as a metric of the database stress is actually great, because it lets us build mechanisms using it as the main metric. We can easily get the number of tickets available through the `serverStatus` command:
 
 ```ruby
 > Mongoid::Clients.default.database.
@@ -60,23 +60,21 @@ class MongoProtector
 
   class TicketsTooLowError < StandardError; end;
 
-  def initialize(optional_args)
-    @args = optional_args
-  end
-
   def call(worker, job, queue)
     raise TicketsTooLowError if tickets_too_low?
     yield
   end
 
   def tickets_too_low?
-    wiredtiger_tickets["write"]["available"] < MIN_TICKET_THRESHOLD || wiredtiger_tickets["read"]["available"] < MIN_TICKET_THRESHOLD
+    wiredtiger_tickets["write"]["available"] < MIN_TICKET_THRESHOLD ||
+      wiredtiger_tickets["read"]["available"] < MIN_TICKET_THRESHOLD
   end
 
   def wiredtiger_tickets
     @wiredtiger_tickets_read_at ||= Time.now
     if @wiredtiger_tickets_read_at < 1.minutes.ago
-      @wiredtiger_tickets = Mongoid::Clients.default.database.command('serverStatus'=> 1).documents[0]['wiredTiger']['concurrentTransactions']
+      @wiredtiger_tickets = Mongoid::Clients.default.database.command('serverStatus'=> 1).
+        documents[0]['wiredTiger']['concurrentTransactions']
       @wiredtiger_tickets_read_at = Time.now
     end
     @wiredtiger_tickets
@@ -88,7 +86,7 @@ Then on your Sidekiq initialization configuration, simply add the new middleware
 ```ruby
 Sidekiq.configure_server do |config|
   config.server_middleware do |chain|
-    chain.add MongoProtector, optional_args
+    chain.add MongoProtector
   end
 end
 ```
@@ -98,8 +96,8 @@ BAM! Sidekiq will now start pushing back jobs whenever the database is under ris
 ## Sidekiq Tamer
 
 While the code described above gets the job done, it is suboptimal in a number of ways. In particular:
-* It doesn't take into account if a job can actually be retried later on or it will go to the DeadSet
+* It doesn't take into account if a job can actually be retried later on or it will go to the DeadSet.
 * It always pushes back, even if the job doesn't access the database at all.
 * It cannot manage correctly multi-server clusters, let alone multiple MongoDB clusters.
 
-In order to solve these limitations, a new gem is being introduced, [sidekiq-tamer](https://github.com/leandrogoe/sidekiq-tamer). It addresses those limitations described above and provides extensibility to handle other kind of resources in the future.
+In order to solve these limitations, a new gem is being introduced, [sidekiq-tamer](https://github.com/leandrogoe/sidekiq-tamer). Not only it addresses the limitations described above, but also provides extensibility to handle other kind of resources in the future, like another kind of database or even other type of service.
