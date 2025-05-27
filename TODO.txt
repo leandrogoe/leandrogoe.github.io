@@ -1,0 +1,7 @@
+Microservices pipelines
+
+How to respect contracts with open api
+
+Chaos testing with Sidekiq
+
+Check mongo fields exist in mongoid queries
