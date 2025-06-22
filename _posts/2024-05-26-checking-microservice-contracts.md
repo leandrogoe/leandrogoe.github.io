@@ -119,9 +119,9 @@ export class BlogsController {
 }
 ```
 
-As you can see, it heavily relies on Typescript, both for annotations and typing. The `@Controller('blogs')` annotation tells NestJS that the controller will be handling responses to the `blogs` path. Then we also have the `@Post` annotation which states that the `create` method will be used to handle the response to HTTP calls that use the `POST` verb in the controller's path. Finally, the parameters are annotated with the `@Body` annotation, which tells us that the service will expect these parameters serialized in the request's body.
+As you can see, it heavily relies on Typescript, both for decorators and typing. The `@Controller('blogs')` decorator tells NestJS that the controller will be handling responses to the `blogs` path. Then we also have the `@Post` decorator which states that the `create` method will be used to handle the response to HTTP calls that use the `POST` verb in the controller's path. Finally, the parameters are annotated with the `@Body` decorator, which tells us that the service will expect these parameters serialized in the request's body.
 
-Note that all these annotations, unlike what happens with our previous JSDoc example **actually define the service behaviour**, and are not separate artifacts that will need to be maintained on top of our implementation.
+Note that all these decorators, unlike what happens with our previous JSDoc example, **actually define the service behaviour** and are not separate artifacts that will need to be maintained on top of our implementation.
 
 That said, while originally intended to define *behaviour*, these artifacts can also be repurposed to output an *specification*. That's where the `@nestjs/swagger` package comes into play. By simply adding a few lines of code to your application bootstrapping, you can ensure an openAPI specification is published in one of the application paths and/or written to a file:
 
@@ -160,7 +160,7 @@ Well, here is the thing: I lied to you.
 
 <img src="/assets/images/liar.jpg">
 
-While that setup will indeed output an specification, you may probably want to add some special artifacts whose only purpose is to add more details to your specification and have no behavioural impact whatsoever. For example you will explicitly need to add the `@ApiProperty` annotation on top of each one of your Dto attributes that you want to include in the documentation:
+While that setup will indeed output an specification, you may probably want to add some special artifacts whose only purpose is to add more details to your specification and have no behavioural impact whatsoever. For example you will explicitly need to add the `@ApiProperty` decorator on top of each one of your DTO attributes that you want to include in the documentation:
 
 ```typescript
 class CreateBlogDto {
@@ -172,7 +172,7 @@ class CreateBlogDto {
 }
 ```
 
-You can also add further attributes to your annotations which will further enrich your specification:
+You can also add further attributes to your decorators which will further enrich your specification:
 
 ```typescript
 class CreateBlogDto {
