@@ -232,4 +232,4 @@ Let's review how this works:
 * You build your API using NestJS, which will help you to build an openAPI specification that matches your implementation with very little overhead or maintainability issues.
 * Once you have an openAPI specification, you can generate a client on the language of your choice with `openapi-generator`.
 * Working on any strongly typed language on your consumer application, like Typescript, will ensure that you benefit from compile time checks on your service calls.
-* In other to ensure all these infrastructure is easily maintained, the CI/CD pipeline of your service will need to publish a new version of the client each time the API changes.
+* In order to ensure all these infrastructure is easily maintained, the CI/CD pipeline of your service will need to publish a new version of the client each time the API changes.
