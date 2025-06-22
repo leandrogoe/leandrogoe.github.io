@@ -123,7 +123,7 @@ As you can see, it heavily relies on Typescript, both for decorators and typing.
 
 Note that all these decorators, unlike what happens with our previous JSDoc example, **actually define the service behaviour** and are not separate artifacts that will need to be maintained on top of our implementation.
 
-That said, while originally intended to define *behaviour*, these artifacts can also be repurposed to output an *specification*. That's where the `@nestjs/swagger` package comes into play. By simply adding a few lines of code to your application bootstrapping, you can ensure an openAPI specification is published in one of the application paths and/or written to a file:
+That said, while originally intended to define *behaviour*, these artifacts can also be repurposed to output an *specification*. That's where the `@nestjs/swagger` package comes into play. By simply adding a few lines of code to your application bootstrapping, you can ensure an OpenAPI specification is published in one of the application paths and/or written to a file:
 
 ```typescript
 import { NestFactory } from '@nestjs/core';
@@ -154,7 +154,7 @@ async function bootstrap() {
 bootstrap();
 ```
 
-Ta-da! Now when your app starts, it will also write an openAPI specification to a file. Pretty cool, isn't it?
+Ta-da! Now when your app starts, it will also write an OpenAPI specification to a file. Pretty cool, isn't it?
 
 Well, here is the thing: I lied to you.
 
@@ -195,9 +195,9 @@ As you may be realizing, adding these second set of artifacts, which only affect
 
 Having a specification is great for documentation, but our goal in this article is not to document but to introduce mechanisms to ensure service contracts are respected.
 
-One simple way to have your contracts respected is to generate strongly-typed clients from an openAPI specification. Having such a client would allow you to check your contracts at compile time!
+One simple way to have your contracts respected is to generate strongly-typed clients from an OpenAPI specification. Having such a client would allow you to check your contracts at compile time!
 
-The openAPI ecosystem provides one tool to make that job very simple: the [open api generator](https://openapi-generator.tech/). The open api generator is a fantastic code generating tool that works over multiple languages. It can both generate mock servers and clients. Here we are interested in that later use case.
+The OpenAPI ecosystem provides one tool to make that job very simple: the [open api generator](https://openapi-generator.tech/). The open api generator is a fantastic code generating tool that works over multiple languages. It can both generate mock servers and clients. Here we are interested in that later use case.
 
 Let's say your consumer service is coded in TypeScript. You can generate a strongly typed client very easily:
 
@@ -229,7 +229,7 @@ Well maybe it won't bump your heart rate, but it definitely reduces to zero the 
 # Putting it all together
 
 Let's review how this works:
-* You build your API using NestJS, which will help you to build an openAPI specification that matches your implementation with very little overhead or maintainability issues.
-* Once you have an openAPI specification, you can generate a client on the language of your choice with `openapi-generator`.
+* You build your API using NestJS, which will help you to build an OpenAPI specification that matches your implementation with very little overhead or maintainability issues.
+* Once you have an OpenAPI specification, you can generate a client on the language of your choice with `openapi-generator`.
 * Working on any strongly typed language on your consumer application, like Typescript, will ensure that you benefit from compile time checks on your service calls.
 * In order to ensure all these infrastructure is easily maintained, the CI/CD pipeline of your service will need to publish a new version of the client each time the API changes.
