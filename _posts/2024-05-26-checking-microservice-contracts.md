@@ -1,30 +1,32 @@
 ---
 layout: single
-toc: true
-toc_sticky: true
+toc: false
+toc_sticky: false
 title:  "Seamlessly verifying API contracts at compile time with NestJS and Typescript"
 date:   2023-05-26 22:00:00 -0300
 ---
 
-One of the challenges that microservices architectures present is that, since code is distributed, it becomes harder to verify all the pieces work together properly.
+One of the challenges that microservices architectures present is that, since code is distributed, it becomes harder to verify whether all the pieces work together properly.
 
-While integration tests are a key instrument to address this challenge, integration tests are usually harder to write and more expensive to run than the average automated test in simpler architectures (e.g. a monolithic application). These challenges grow whenever you add more services and when your services are managed by multiple teams. Therefore, while it's definitely wise to plan integration tests for your use cases, you will most likely be limited in the number and types of tests you will be able to add.
+While integration tests are a key instrument to address this challenge, they are usually harder to write and more expensive to run than the average automated test in simpler architectures (e.g. a monolithic application). These challenges grow whenever you add more services and when your services are managed by multiple teams. Therefore, while it's definitely wise to plan integration tests for your use cases, you will most likely be limited in the number and types of tests you will be able to add.
 
-The second tool that will help you verify proper integration is contract verification. There are many ways to check contracts between multiple services, but the underlying idea is simple: we want to verify that whenever we have an interaction between two services, the contracts (i.e. the methods and payload format) are respected. In this blog post, we are presenting a scalable approach to contract testing at compile time, which relies on TypeScript, NestJS, and OpenAPI.
+The second tool that will help you verify proper integration is contract verification. There are many ways to check contracts between multiple services, but the underlying idea is simple: we want to verify that whenever we have an interaction between two services, the contracts (i.e. the methods and payload format) are respected. In this blog post, we present a scalable approach to contract verification at compile time, which relies on TypeScript, NestJS, and OpenAPI.
 
 # What is OpenAPI?
 
-OpenAPI is an open standard for defining HTTP service contracts. It's the de-facto standard for defining JSON apis, specially in the Javascript ecosystem. While a bit more limited, it also has support of XML, and there's tooling for other languages.
+OpenAPI is an open standard for defining HTTP service contracts. It's the de-facto standard for defining JSON apis, especially in the JavaScript ecosystem. While a bit more limited, it also has support of XML, and there's tooling for other languages.
 
 # Writing and maintaining API specifications
 
 There are two opposing paradigms when it comes to writing and maintaining your open api specs: design-first and code-first.
 
-Design-first paradigm, basically mean that you would work on your specification before coding your actual service. Code-first on the other hand, as the name suggests, is based on the idea that the development should focus on the actual code itself first and then on the specification. Here we will be explore the code-first paradigm. We won't be expanding on the trade-offs involved on choosing each ones of these alternatives, but if you are interested in knowing more there's an excellent article [here](https://apisyouwonthate.com/blog/api-design-first-vs-code-first/).
+Under the design-first paradigm, you would work on your specification before coding your actual service. Code-first on the other hand, as the name suggests, is based on the idea that the development should focus on the actual code itself first and then on the specification.
+
+Here we will be explore the code-first paradigm. We won't be expanding on the trade-offs involved on choosing between these alternatives, but if you are interested in a deep dive on the subject [here is an excellent article](https://apisyouwonthate.com/blog/api-design-first-vs-code-first/).
 
 Regardless of what path you choose, you will need to somehow ensure that your API specification correctly defines the behavior of your application and that whenever changes happen you can easily keep them synchronized.
 
-There is no single way to get code-first done. That said, it is certainly quite common that development teams rely on tools that build the specification from metadata that lives in the code itself. This metadata sometimes exists in the form of special comments or annotations. For instance, some libraries, like swagger-jsdoc, will translate your jsdoc comments into an open api specification:
+There is no single way to get code-first done. That said, it is certainly quite common that development teams rely on tools that build the specification from metadata that lives in the code itself. This metadata sometimes exists in the form of special comments or annotations. For instance, some libraries, like swagger-jsdoc, will translate your JSDoc comments into an open api specification:
 
 ```javascript
   /**
@@ -55,7 +57,7 @@ There is no single way to get code-first done. That said, it is certainly quite 
   });
 ```
 
-The main drawback of this approach is that there's no way to guarantee that these special artifacts in the code correctly reflect the actual behaviour of the service. To overcome these problems some other tools have arisen, like RSwag, that help you build your specification in the form of special unit tests, what ensures that every endpoint that is part of your specification is backed up by a special unit test:
+The main drawback of this approach is that there's no way to guarantee that these special artifacts in the code correctly reflect the actual behaviour of the service. To overcome these problems some other tools have arisen, like RSwag, that help you build your specification in the form of special unit tests, which ensures that every endpoint that is part of your specification is backed up by a special unit test:
 
 ```ruby
 # spec/requests/blogs_spec.rb
@@ -100,10 +102,10 @@ The holy grail of code-first would be a system that ties the actual behaviour of
 NestJS is an example of such a framework. A controller in NestJS looks like this:
 
 ```typescript
-import { Controller, Post } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 
 class CreateBlogDto {
-  name: string;
+  title: string;
   content: string;
 }
 
@@ -117,11 +119,11 @@ export class BlogsController {
 }
 ```
 
-As you can see, it heavily relies on Typescript, both for annotations and typing. The `@Controller('blogs')` annotation tells NestJS that the controller will be handling responses to the `blogs` path. Then we also have the `@Post` annotation which states that the `create` method will be used to handle the response to `POST` http calls in the controller's path. Finally the parameters are annotated with the `@Body` annotation, which tells us that the service will expect these parameters serialized in the body.
+As you can see, it heavily relies on Typescript, both for annotations and typing. The `@Controller('blogs')` annotation tells NestJS that the controller will be handling responses to the `blogs` path. Then we also have the `@Post` annotation which states that the `create` method will be used to handle the response to HTTP calls that use the `POST` verb in the controller's path. Finally, the parameters are annotated with the `@Body` annotation, which tells us that the service will expect these parameters serialized in the request's body.
 
-Note that all these annotations, unlike what happens with our previous jsdoc example **actually define the service behaviour**, and are not separate artifacts that will need to be maintained on top of our implementation.
+Note that all these annotations, unlike what happens with our previous JSDoc example **actually define the service behaviour**, and are not separate artifacts that will need to be maintained on top of our implementation.
 
-You may be correctly guessing that all these artifacts, while originally intended to define *behaviour* can also be repurposed to output an *specification*. That's where the `@nestjs/swagger` package comes into place. By simply adding a few lines of code to your application bootstrapping, you can ensure an openAPI specification is published in one of the application paths:
+That said, while originally intended to define *behaviour*, these artifacts can also be repurposed to output an *specification*. That's where the `@nestjs/swagger` package comes into play. By simply adding a few lines of code to your application bootstrapping, you can ensure an openAPI specification is published in one of the application paths and/or written to a file:
 
 ```typescript
 import { NestFactory } from '@nestjs/core';
@@ -152,14 +154,18 @@ async function bootstrap() {
 bootstrap();
 ```
 
-TaDa! Now when your app starts, it will also write an openAPI specification to a file. Pretty cool, isn't it?
+Ta-da! Now when your app starts, it will also write an openAPI specification to a file. Pretty cool, isn't it?
 
-Well, here is the thing: I lied to you. While that setup will indeed output an specification, you may probably want to add some special artifacts whose only purpose is to add more details to your specification and have no behavioural impact whatsoever. For example you will explicitly need to add the `@ApiProperty` annotation on top of each one of your Dto attributes that you want to include in the documentation:
+Well, here is the thing: I lied to you.
 
-```
+<img src="/assets/images/liar.jpg">
+
+While that setup will indeed output an specification, you may probably want to add some special artifacts whose only purpose is to add more details to your specification and have no behavioural impact whatsoever. For example you will explicitly need to add the `@ApiProperty` annotation on top of each one of your Dto attributes that you want to include in the documentation:
+
+```typescript
 class CreateBlogDto {
   @ApiProperty
-  name: string;
+  title: string;
 
   @ApiProperty
   content: string;
@@ -168,13 +174,13 @@ class CreateBlogDto {
 
 You can also add further attributes to your annotations which will further enrich your specification:
 
-```
+```typescript
 class CreateBlogDto {
   @ApiProperty({
-    description: 'The name of your blog',
+    description: 'The title of your blog',
     example: 'Yet another tech blog'
   })
-  name: string;
+  title: string;
 
   @ApiProperty({
     description: 'The contents of your blog',
@@ -183,3 +189,47 @@ class CreateBlogDto {
 }
 ```
 
+As you may be realizing, adding these second set of artifacts, which only affect the specification but are unrelated to behaviour is inevitable, as the OpenAPI specification includes aspects that are only intended to add context to the API consumers in the form of free text, and will never easily translate into an specific application behaviour.
+
+# The consumer
+
+Having an specification is great for documentation, but our goal in this article is not to document but to introduce mechanisms to verify service contracts are respected.
+
+One simple way to have your contracts respected is to generate strongly-typed clients from an openAPI specification. Having such a client would allow you to check your contracts at compile time!
+
+The openAPI ecosystem provides one tool to make that job very simple: the [open api generator](https://openapi-generator.tech/). The open api generator is a fantastic code generating tool that works over multiple languages. It can both generate mock servers and clients. Here we are interested in that later use case.
+
+Let's say your consumer service is coded in TypeScript. You can generate a strongly typed client very easily:
+
+```
+npx @openapitools/openapi-generator-cli generate -i $PATH_TO_OPEN_API_SPEC \
+    -g typescript-axios -o $OUTPUT_CLIENT_PATH \
+    --additional-properties=useSingleRequestParameter=true
+```
+
+That will generate code for an `npm` package that you can either publish or just integrate directly into your consumer service. Then, in your consumer, instead of calling your APIs directly with some HTTP library like axios, you will use your strongly typed client:
+
+```typescript
+import { Api, Configuration } from './generated-clients/my-service'
+
+async callMyApi() {
+  const apiConfig = new Configuration({ basePath: process.env('API_URL') });
+  const apiClient = new Api(apiConfig);
+
+  apiClient.createBlog(createBlogParameters: { title: 'How my dog ate my homework', content: 'No content, it was eaten as well' })
+}
+```
+
+Here the `createBlog` method will be typed in Typescript, which will verify at compile time that you are respecting the contract of your service. Isn't that exciting?!!!
+
+<img src="/assets/images/dog_fake_smile.jpg">
+
+Well maybe it won't bump your heart rate, but it definitely reduces to zero the chance of contract-related issues on your deploys :)
+
+# Putting it all together
+
+Let's review how this works:
+* You build your API using NestJS, which will help you to build an openAPI specification that matches your implementation with very little overhead or maintainability issues.
+* Once you have an openAPI specification, you can generate a client on the language of your choice with `openapi-generator`.
+* Working on any strongly typed language on your consumer application, like Typescript, will ensure that you benefit from compile time checks on your service calls.
+* In other to ensure all these infrastructure is easily maintained, the CI/CD pipeline of your service will need to publish a new version of the client each time the API changes.

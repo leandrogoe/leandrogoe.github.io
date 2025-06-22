@@ -12,7 +12,7 @@
 
 #theme                  : "minimal-mistakes-jekyll"
 remote_theme           : "mmistakes/minimal-mistakes"
-minimal_mistakes_skin    : "default" # "air", "aqua", "contrast", "dark", "dirt", "neon", "mint", "plum", "sunrise"
+minimal_mistakes_skin    : "dark" # "air", "aqua", "contrast", "dark", "dirt", "neon", "mint", "plum", "sunrise"
 
 # Site Settings
 locale                   : "en-US"
@@ -105,7 +105,7 @@ analytics:
 # Site Author
 author:
   name   : "Leandro Gomez"
-  avatar : "/assets/images/lg-1.jpeg"
+  avatar : "/assets/images/lg-2.jpg"
   bio    : >-
     Hey there, I'm a software engineer hailing from the sunny shores of Montevideo.
 
