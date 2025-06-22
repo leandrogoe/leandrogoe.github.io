@@ -6,7 +6,7 @@ title:  "Seamlessly verifying API contracts at compile time with NestJS and Type
 date:   2023-05-26 22:00:00 -0300
 ---
 
-One of the challenges that microservices architectures present is that, since code is distributed, it becomes harder to verify whether all the pieces work together properly.
+One of the challenges that microservice architectures present is that, since code is distributed, it becomes harder to verify whether all the pieces work together properly.
 
 While integration tests are a key instrument to address this challenge, they are usually harder to write and more expensive to run than the average automated test in simpler architectures (e.g. a monolithic application). These challenges grow whenever you add more services and when your services are managed by multiple teams. Therefore, while it's definitely wise to plan integration tests for your use cases, you will most likely be limited in the number and types of tests you will be able to add.
 
