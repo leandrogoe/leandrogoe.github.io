@@ -193,7 +193,7 @@ As you may be realizing, adding these second set of artifacts, which only affect
 
 # The consumer
 
-Having a specification is great for documentation, but our goal in this article is not to document but to introduce mechanisms to verify service contracts are respected.
+Having a specification is great for documentation, but our goal in this article is not to document but to introduce mechanisms to ensure service contracts are respected.
 
 One simple way to have your contracts respected is to generate strongly-typed clients from an openAPI specification. Having such a client would allow you to check your contracts at compile time!
 
