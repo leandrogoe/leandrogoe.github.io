@@ -22,7 +22,7 @@ There are two opposing paradigms when it comes to writing and maintaining your O
 
 Under the design-first paradigm, you would work on your specification before coding your actual service. Code-first on the other hand, as the name suggests, is based on the idea that the development should focus on the actual code itself first and then on the specification.
 
-Here we will explore the code-first paradigm. We won't be expanding on the trade-offs involved in choosing between these alternatives, but if you are interested in a deep dive on the subject [here is an excellent article](https://apisyouwonthate.com/blog/api-design-first-vs-code-first/).
+Here we will explore the code-first paradigm. We won't be expanding on the trade-offs involved in choosing between these alternatives, but if you are interested in a deep dive on the subject [here is an excellent article](https://medium.com/@tiokachiu/api-first-vs-code-first-choosing-the-right-approach-for-your-project-868443e73052).
 
 Regardless of what path you choose, you will need to somehow ensure that your API specification correctly defines the behavior of your application and that whenever changes happen you can easily keep them synchronized.
 
